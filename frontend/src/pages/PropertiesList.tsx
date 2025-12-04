@@ -6,10 +6,8 @@ import PropertyCard from '../components/PropertyCard';
 
 /**
  * PropertiesList Page
- * Affiche la liste des propriétés avec filtres et pagination
+ * Affiche la liste des propriétés avec filtres
  */
-
-const ITEMS_PER_PAGE = 6; // Nombre d'annonces par page
 
 export default function PropertiesList() {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -20,16 +18,8 @@ export default function PropertiesList() {
   const [cityFilter, setCityFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'sale' | 'rent'>('all');
 
-  // État de la pagination
-  const [currentPage, setCurrentPage] = useState(1);
-
   useEffect(() => {
     loadProperties();
-  }, [cityFilter, typeFilter]);
-
-  // Réinitialiser la page quand on change les filtres
-  useEffect(() => {
-    setCurrentPage(1);
   }, [cityFilter, typeFilter]);
 
   const loadProperties = async () => {
@@ -54,11 +44,8 @@ export default function PropertiesList() {
   const handleDelete = async (id: string) => {
     try {
       await propertiesApi.delete(id);
+      // Recharger la liste après suppression
       await loadProperties();
-      // Si on supprime le dernier item d'une page, revenir à la page précédente
-      if (currentProperties.length === 1 && currentPage > 1) {
-        setCurrentPage(currentPage - 1);
-      }
     } catch (err) {
       console.error('Error deleting property:', err);
       alert('Erreur lors de la suppression de l\'annonce');
@@ -68,30 +55,6 @@ export default function PropertiesList() {
   const handleClearFilters = () => {
     setCityFilter('');
     setTypeFilter('all');
-  };
-
-  // Calculs de pagination
-  const totalPages = Math.ceil(properties.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentProperties = properties.slice(startIndex, endIndex);
-
-  // Fonctions de navigation
-  const goToPage = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      goToPage(currentPage - 1);
-    }
-  };
-
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      goToPage(currentPage + 1);
-    }
   };
 
   if (loading) {
@@ -184,12 +147,9 @@ export default function PropertiesList() {
         <>
           <div style={{ marginBottom: '1rem', color: '#6b7280' }}>
             {properties.length} annonce{properties.length > 1 ? 's' : ''} trouvée{properties.length > 1 ? 's' : ''}
-            {totalPages > 1 && ` • Page ${currentPage} sur ${totalPages}`}
           </div>
-
-          {/* Grid des annonces */}
           <div className="properties-grid">
-            {currentProperties.map((property) => (
+            {properties.map((property) => (
               <PropertyCard
                 key={property.id}
                 property={property}
@@ -197,39 +157,6 @@ export default function PropertiesList() {
               />
             ))}
           </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="pagination">
-              <button
-                className="pagination-btn"
-                onClick={goToPreviousPage}
-                disabled={currentPage === 1}
-              >
-                ← Précédent
-              </button>
-
-              <div className="pagination-pages">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    className={`pagination-page ${page === currentPage ? 'active' : ''}`}
-                    onClick={() => goToPage(page)}
-                  >
-                    {page}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                className="pagination-btn"
-                onClick={goToNextPage}
-                disabled={currentPage === totalPages}
-              >
-                Suivant →
-              </button>
-            </div>
-          )}
         </>
       )}
     </div>

@@ -1,16 +1,4 @@
-# dépendances
 **/node_modules
-
-# builds
 dist
 build
-
-# logs
-*.log
-
-# env
 .env
-.env.local
-
-# outils
-.vscode
